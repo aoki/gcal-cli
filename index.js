@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
-const google = require('googleapis');
+const { google } = require('googleapis');
 const argv = require('minimist')(process.argv.slice(2));
 const Sherlock = require('sherlockjs');
 const chalk = require('chalk');
@@ -44,7 +44,7 @@ const getOauth2Client = () => {
   const {
     client_id: clientId,
     client_secret: clientSecret,
-    redirect_uris: redirectUris
+    redirect_uris: redirectUris,
   } = JSON.parse(content).installed;
   return new google.auth.OAuth2(clientId, clientSecret, redirectUris[0]);
 };
@@ -68,7 +68,7 @@ const generateUrl = async () => {
   const oauth2Client = getOauth2Client();
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: conf.SCOPES
+    scope: conf.SCOPES,
   });
   console.log(authUrl);
 };
@@ -80,7 +80,9 @@ const generateUrl = async () => {
  */
 const storeToken = async (code) => {
   const oauth2Client = getOauth2Client();
-  const tokens = await promisify(oauth2Client.getToken).bind(oauth2Client)(code);
+  const tokens = await promisify(oauth2Client.getToken).bind(oauth2Client)(
+    code
+  );
   // oauth2Client.setCredentials(tokens);
   fs.writeFileSync(conf.TOKEN_PATH, JSON.stringify(tokens));
   console.log(`Token stored in ${conf.TOKEN_PATH}`);
@@ -100,7 +102,7 @@ const list = async (naturalInfo, options) => {
   const params = {
     calendarId: conf.CALENDAR_ID,
     singleEvents: true,
-    orderBy: conf.LIST_ORDER
+    orderBy: conf.LIST_ORDER,
   };
   if (naturalInfo) {
     const { startDate, endDate, isAllDay } = Sherlock.parse(naturalInfo);
@@ -125,13 +127,15 @@ const list = async (naturalInfo, options) => {
   }
 
   const calendar = await getClient();
-  const { items: events } = await promisify(calendar.events.list)(params);
+  const { items: events } = (await calendar.events.list(params)).data
   if (events.length === 0) {
-    console.log(`No upcoming events found (${params.timeMin} ~ ${params.timeMax || ''})`);
+    console.log(
+      `No upcoming events found (${params.timeMin} ~ ${params.timeMax || ''})`
+    );
     return;
   }
   console.log(`Upcoming events (${params.timeMin} ~ ${params.timeMax || ''})`);
-  events.forEach(event => {
+  events.forEach((event) => {
     let start;
     if (event.start.dateTime) {
       start = moment(event.start.dateTime).format(conf.LIST_FORMAT_DATETIME);
@@ -159,21 +163,27 @@ const list = async (naturalInfo, options) => {
 const insert = async (naturalInfo, options) => {
   const event = {};
   if (naturalInfo) {
-    const { eventTitle, startDate, endDate, isAllDay } = Sherlock.parse(naturalInfo);
+    const { eventTitle, startDate, endDate, isAllDay } = Sherlock.parse(
+      naturalInfo
+    );
     event.summary = eventTitle;
     if (isAllDay) {
       event.start = {
-        date: moment(startDate).format('YYYY-MM-DD')
+        date: moment(startDate).format('YYYY-MM-DD'),
       };
       event.end = {
-        date: endDate ? moment(endDate).add(1, 'd').format('YYYY-MM-DD') : moment(startDate).format('YYYY-MM-DD')
+        date: endDate
+          ? moment(endDate).add(1, 'd').format('YYYY-MM-DD')
+          : moment(startDate).format('YYYY-MM-DD'),
       };
     } else {
       event.start = {
-        dateTime: moment(startDate).format()
+        dateTime: moment(startDate).format(),
       };
       event.end = {
-        dateTime: endDate ? moment(endDate).format() : moment(startDate).add(conf.EVENT_DURATION, 'm').format()
+        dateTime: endDate
+          ? moment(endDate).format()
+          : moment(startDate).add(conf.EVENT_DURATION, 'm').format(),
       };
     }
   } else {
@@ -182,32 +192,42 @@ const insert = async (naturalInfo, options) => {
     const isAllDay = !time;
     if (isAllDay) {
       event.start = {
-        date: moment(date).format('YYYY-MM-DD')
+        date: moment(date).format('YYYY-MM-DD'),
       };
       event.end = {
-        date: duration ? 
-          moment(date).add(duration.slice(0, -1), duration.slice(-1)).format('YYYY-MM-DD') :
-          moment(date).add(1, 'd').format('YYYY-MM-DD')
+        date: duration
+          ? moment(date)
+            .add(duration.slice(0, -1), duration.slice(-1))
+            .format('YYYY-MM-DD')
+          : moment(date).add(1, 'd').format('YYYY-MM-DD'),
       };
     } else {
       const dateTime = `${date} ${time}`;
       event.start = {
-        dateTime: moment(dateTime).format()
+        dateTime: moment(dateTime).format(),
       };
       event.end = {
-        dateTime: duration ? 
-          moment(dateTime).add(duration.slice(0, -1), duration.slice(-1)).format() :
-          moment(dateTime).add(conf.EVENT_DURATION, 'm').format()
+        dateTime: duration
+          ? moment(dateTime)
+            .add(duration.slice(0, -1), duration.slice(-1))
+            .format()
+          : moment(dateTime).add(conf.EVENT_DURATION, 'm').format(),
       };
     }
   }
   const params = {
     calendarId: conf.CALENDAR_ID,
-    resource: event
+    resource: event,
   };
   const calendar = await getClient();
-  const { summary: insertedSummary, start, end, htmlLink } = await promisify(calendar.events.insert)(params);
-  console.log(`${insertedSummary || 'no-summary'}: ${start.date || start.dateTime} ~ ${end.date || end.dateTime}`);
+  const { summary: insertedSummary, start, end, htmlLink } = await promisify(
+    calendar.events.insert
+  )(params);
+  console.log(
+    `${insertedSummary || 'no-summary'}: ${start.date || start.dateTime} ~ ${
+    end.date || end.dateTime
+    }`
+  );
   console.log(htmlLink);
 };
 
@@ -220,11 +240,11 @@ const bulk = async (eventsPath) => {
   const events = require(eventsPath);
   const calendar = await getClient();
   const insert = promisify(calendar.events.insert);
-  const promises = events.map(async event => {
+  const promises = events.map(async (event) => {
     try {
       const result = await insert(event);
       console.log('Event inserted');
-      conf.BULK_RESULT.forEach(property => {
+      conf.BULK_RESULT.forEach((property) => {
         if (result[property]) {
           console.log(` ${property}: ${result[property]}`);
         }
@@ -260,7 +280,7 @@ const bulk = async (eventsPath) => {
       const params = {
         from: argv.from || argv.f,
         to: argv.to || argv.t,
-        showId: argv['show-id'] || argv.i
+        showId: argv['show-id'] || argv.i,
       };
       await list(naturalInfo, params);
       break;
@@ -271,7 +291,7 @@ const bulk = async (eventsPath) => {
         summary: argv.summary || argv.s,
         date: argv.date || argv.d,
         time: argv.time || argv.t,
-        duration: argv.duration || argv.D
+        duration: argv.duration || argv.D,
       };
       await insert(naturalInfo, params);
       break;
