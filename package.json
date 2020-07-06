@@ -8,7 +8,7 @@
     "googleapis": "^21.3.0",
     "minimist": "^1.2.5",
     "moment": "^2.27.0",
-    "sherlockjs": "^1.3.7"
+    "sherlockjs": "^1.4.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
