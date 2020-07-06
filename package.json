@@ -11,9 +11,12 @@
     "sherlockjs": "^1.3.7"
   },
   "devDependencies": {
-    "eslint": "^4.6.1"
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.4.0"
   },
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": ""
   },
   "keywords": [
