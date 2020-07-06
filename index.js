@@ -142,11 +142,20 @@ const list = async (naturalInfo, options) => {
     } else {
       start = moment(event.start.date).format(conf.LIST_FORMAT_DATE);
     }
-    if (showId) {
-      console.log(` ${start} - ${chalk.bold(event.summary)} (${event.id})`);
-    } else {
-      console.log(` ${start} - ${chalk.bold(event.summary)}`);
-    }
+
+    const eventId = showId ? `(${event.id})` : "";
+    const hangoutLink = event.hangoutLink ? `${event.hangoutLink}` : "";
+
+    const now = moment();
+    const isCurrent =
+      now >= moment(event.start.dateTime) && now < moment(event.end.dateTime);
+
+    const output = isCurrent ? (s) => {
+      console.log(
+        chalk.green.bold(s))
+    } : (s) => { console.log(s) }
+
+    output(`${isCurrent} ${start} - ${chalk.bold(event.summary)} ${chalk.underline.blue(hangoutLink)} ${eventId}`);
   });
 };
 
