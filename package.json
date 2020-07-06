@@ -5,7 +5,7 @@
   "bin": "index.js",
   "dependencies": {
     "chalk": "^4.1.0",
-    "googleapis": "^29.0.0",
+    "googleapis": "^40.0.0",
     "minimist": "^1.2.5",
     "moment": "^2.27.0",
     "sherlockjs": "^1.4.0"
