@@ -155,7 +155,7 @@ const list = async (naturalInfo, options) => {
         chalk.green.bold(s))
     } : (s) => { console.log(s) }
 
-    output(`${isCurrent} ${start} - ${chalk.bold(event.summary)} ${chalk.underline.blue(hangoutLink)} ${eventId}`);
+    output(`${start} - ${chalk.bold(event.summary)} ${chalk.underline.blue(hangoutLink)} ${eventId}`);
   });
 };
 
